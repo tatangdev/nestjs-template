@@ -1,11 +1,21 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { CatsModule } from './cats/cats.module';
+import { CommonModule } from './common/common.module';
+import { envSchema } from './common/env.config';
 import { WebResponseExceptionFilter } from './common/web-response.filter';
 
 @Module({
-  imports: [CatsModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate: (raw) => envSchema.parse(raw),
+    }),
+    CommonModule,
+    CatsModule,
+  ],
   controllers: [],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },
