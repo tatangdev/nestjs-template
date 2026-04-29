@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
+import { AuthModule } from './auth/auth.module';
 import { CatsModule } from './cats/cats.module';
 import { CommonModule } from './common/common.module';
 import { envSchema } from './common/env.config';
 import { WebResponseExceptionFilter } from './common/web-response.filter';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { WebResponseExceptionFilter } from './common/web-response.filter';
       validate: (raw) => envSchema.parse(raw),
     }),
     CommonModule,
+    AuthModule,
+    UsersModule,
     CatsModule,
   ],
   controllers: [],

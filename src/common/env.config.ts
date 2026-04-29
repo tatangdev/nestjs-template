@@ -21,6 +21,12 @@ export const envSchema = z.object({
     .string()
     .default('false')
     .transform((v) => v === 'true'),
+
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  JWT_ACCESS_EXPIRATION: z.string().default('15m'),
+  JWT_REFRESH_EXPIRATION_DAYS: z.coerce.number().int().positive().default(7),
+
+  CORS_ORIGINS: z.string().default('*'),
 });
 
 export type Env = z.infer<typeof envSchema>;
