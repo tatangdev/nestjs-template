@@ -14,6 +14,10 @@ import { DrizzleService } from '../common/drizzle.service';
 import { env } from '../common/env.config';
 import { notDeleted, otpCodes, userSessions, users } from '../db/schema';
 import {
+  FacebookOAuthService,
+  type FacebookUserInfo,
+} from './facebook-oauth.service';
+import {
   GoogleOAuthService,
   type GoogleUserInfo,
 } from './google-oauth.service';
@@ -28,6 +32,9 @@ import {
   type TokenPair,
   type VerifyEmailRequest,
 } from './auth.dto';
+
+export type OAuthProvider = 'google' | 'facebook';
+export type OAuthProfile = GoogleUserInfo | FacebookUserInfo;
 
 const OTP_EXPIRY_MS = 5 * 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
@@ -46,6 +53,7 @@ export class AuthService {
     private readonly drizzle: DrizzleService,
     private readonly jwt: JwtService,
     private readonly googleOauth: GoogleOAuthService,
+    private readonly facebookOauth: FacebookOAuthService,
   ) {}
 
   async register(request: RegisterRequest): Promise<RegisterResult> {
@@ -236,17 +244,30 @@ export class AuthService {
     context?: RequestContext,
   ): Promise<TokenPair> {
     const profile = await this.googleOauth.exchangeCodeForUserInfo(code);
-    return this.linkOrCreateOAuthUser(profile, context);
+    return this.linkOrCreateOAuthUser('google', profile, context);
+  }
+
+  async facebookLogin(
+    accessToken: string,
+    context?: RequestContext,
+  ): Promise<TokenPair> {
+    const profile = await this.facebookOauth.verifyAccessToken(accessToken);
+    return this.linkOrCreateOAuthUser('facebook', profile, context);
   }
 
   private async linkOrCreateOAuthUser(
-    profile: GoogleUserInfo,
+    provider: OAuthProvider,
+    profile: OAuthProfile,
     context?: RequestContext,
   ): Promise<TokenPair> {
+    const providerColumn =
+      provider === 'google' ? users.google_id : users.facebook_id;
+    const providerField = provider === 'google' ? 'google_id' : 'facebook_id';
+
     const [byProvider] = await this.drizzle.db
       .select()
       .from(users)
-      .where(and(eq(users.google_id, profile.id), notDeleted(users)));
+      .where(and(eq(providerColumn, profile.id), notDeleted(users)));
     if (byProvider) {
       return this.createTokenPair(byProvider.id, byProvider.email, context);
     }
@@ -256,7 +277,7 @@ export class AuthService {
       .from(users)
       .where(and(eq(users.email, profile.email), notDeleted(users)));
     if (byEmail) {
-      const updates: Record<string, unknown> = { google_id: profile.id };
+      const updates: Record<string, unknown> = { [providerField]: profile.id };
       if (!byEmail.email_verified_at) updates.email_verified_at = Date.now();
       if (!byEmail.avatar_url && profile.picture)
         updates.avatar_url = profile.picture;
@@ -273,7 +294,7 @@ export class AuthService {
       .values({
         email: profile.email,
         email_verified_at: Date.now(),
-        google_id: profile.id,
+        [providerField]: profile.id,
         first_name: firstName ?? null,
         last_name: rest.join(' ') || null,
         avatar_url: profile.picture ?? null,

@@ -13,6 +13,7 @@ import type { Request } from 'express';
 import { AuthGuard, SessionId } from '../common/auth.guard';
 import type { WebResponse } from '../common/web-response';
 import {
+  FacebookLoginDto,
   GoogleLoginDto,
   LoginDto,
   RefreshDto,
@@ -99,6 +100,21 @@ export class AuthController {
   ): Promise<WebResponse<TokenPair>> {
     return {
       data: await this.auth.googleLogin(body.code, extractContext(req)),
+    };
+  }
+
+  @Post('/facebook')
+  @HttpCode(HttpStatus.OK)
+  @ZodResponse({ type: TokenPairResponseDto })
+  async facebook(
+    @Req() req: Request,
+    @Body() body: FacebookLoginDto,
+  ): Promise<WebResponse<TokenPair>> {
+    return {
+      data: await this.auth.facebookLogin(
+        body.access_token,
+        extractContext(req),
+      ),
     };
   }
 

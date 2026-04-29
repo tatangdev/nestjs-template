@@ -30,6 +30,10 @@ export const GoogleLoginSchema = z.object({
   code: z.string().min(1, 'Google authorization code is required'),
 });
 
+export const FacebookLoginSchema = z.object({
+  access_token: z.string().min(1, 'Facebook access token is required'),
+});
+
 export const RegisterResultSchema = z.object({
   user_id: z.uuid(),
   email: z.string(),
@@ -62,6 +66,7 @@ export type ResendOtpRequest = z.infer<typeof ResendOtpSchema>;
 export type LoginRequest = z.infer<typeof LoginSchema>;
 export type RefreshRequest = z.infer<typeof RefreshSchema>;
 export type GoogleLoginRequest = z.infer<typeof GoogleLoginSchema>;
+export type FacebookLoginRequest = z.infer<typeof FacebookLoginSchema>;
 export type RegisterResult = z.infer<typeof RegisterResultSchema>;
 export type TokenPair = z.infer<typeof TokenPairSchema>;
 export type ResendOtpResult = z.infer<typeof ResendOtpResultSchema>;
@@ -73,6 +78,7 @@ export class ResendOtpDto extends createZodDto(ResendOtpSchema) {}
 export class LoginDto extends createZodDto(LoginSchema) {}
 export class RefreshDto extends createZodDto(RefreshSchema) {}
 export class GoogleLoginDto extends createZodDto(GoogleLoginSchema) {}
+export class FacebookLoginDto extends createZodDto(FacebookLoginSchema) {}
 
 export class RegisterResponseDto extends WebResponseDto(RegisterResultSchema) {}
 export class TokenPairResponseDto extends WebResponseDto(TokenPairSchema) {}
