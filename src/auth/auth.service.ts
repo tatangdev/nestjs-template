@@ -14,6 +14,10 @@ import { DrizzleService } from '../common/drizzle.service';
 import { env } from '../common/env.config';
 import { notDeleted, otpCodes, userSessions, users } from '../db/schema';
 import {
+  GoogleOAuthService,
+  type GoogleUserInfo,
+} from './google-oauth.service';
+import {
   type LoginRequest,
   type RefreshRequest,
   type RefreshResult,
@@ -41,6 +45,7 @@ export class AuthService {
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly jwt: JwtService,
+    private readonly googleOauth: GoogleOAuthService,
   ) {}
 
   async register(request: RegisterRequest): Promise<RegisterResult> {
@@ -224,6 +229,58 @@ export class AuthService {
       .update(userSessions)
       .set({ revoked_at: Date.now() })
       .where(eq(userSessions.id, sessionId));
+  }
+
+  async googleLogin(
+    code: string,
+    context?: RequestContext,
+  ): Promise<TokenPair> {
+    const profile = await this.googleOauth.exchangeCodeForUserInfo(code);
+    return this.linkOrCreateOAuthUser(profile, context);
+  }
+
+  private async linkOrCreateOAuthUser(
+    profile: GoogleUserInfo,
+    context?: RequestContext,
+  ): Promise<TokenPair> {
+    const [byProvider] = await this.drizzle.db
+      .select()
+      .from(users)
+      .where(and(eq(users.google_id, profile.id), notDeleted(users)));
+    if (byProvider) {
+      return this.createTokenPair(byProvider.id, byProvider.email, context);
+    }
+
+    const [byEmail] = await this.drizzle.db
+      .select()
+      .from(users)
+      .where(and(eq(users.email, profile.email), notDeleted(users)));
+    if (byEmail) {
+      const updates: Record<string, unknown> = { google_id: profile.id };
+      if (!byEmail.email_verified_at) updates.email_verified_at = Date.now();
+      if (!byEmail.avatar_url && profile.picture)
+        updates.avatar_url = profile.picture;
+      await this.drizzle.db
+        .update(users)
+        .set(updates)
+        .where(eq(users.id, byEmail.id));
+      return this.createTokenPair(byEmail.id, byEmail.email, context);
+    }
+
+    const [firstName, ...rest] = profile.name.split(' ');
+    const [created] = await this.drizzle.db
+      .insert(users)
+      .values({
+        email: profile.email,
+        email_verified_at: Date.now(),
+        google_id: profile.id,
+        first_name: firstName ?? null,
+        last_name: rest.join(' ') || null,
+        avatar_url: profile.picture ?? null,
+      })
+      .returning();
+    if (!created) throw new BadRequestException('Failed to create user');
+    return this.createTokenPair(created.id, created.email, context);
   }
 
   private generateOtp(): string {

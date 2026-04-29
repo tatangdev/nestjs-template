@@ -13,6 +13,7 @@ import type { Request } from 'express';
 import { AuthGuard, SessionId } from '../common/auth.guard';
 import type { WebResponse } from '../common/web-response';
 import {
+  GoogleLoginDto,
   LoginDto,
   RefreshDto,
   RefreshResponseDto,
@@ -87,6 +88,18 @@ export class AuthController {
   @ZodResponse({ type: RefreshResponseDto })
   async refresh(@Body() body: RefreshDto): Promise<WebResponse<RefreshResult>> {
     return { data: await this.auth.refresh(body) };
+  }
+
+  @Post('/google')
+  @HttpCode(HttpStatus.OK)
+  @ZodResponse({ type: TokenPairResponseDto })
+  async google(
+    @Req() req: Request,
+    @Body() body: GoogleLoginDto,
+  ): Promise<WebResponse<TokenPair>> {
+    return {
+      data: await this.auth.googleLogin(body.code, extractContext(req)),
+    };
   }
 
   @Post('/logout')

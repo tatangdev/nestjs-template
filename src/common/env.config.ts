@@ -27,6 +27,10 @@ export const envSchema = z.object({
   JWT_REFRESH_EXPIRATION_DAYS: z.coerce.number().int().positive().default(7),
 
   CORS_ORIGINS: z.string().default('*'),
+
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_REDIRECT_URI: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
