@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -43,7 +44,7 @@ export class CatsController {
   }
 
   @Post()
-  @ZodResponse({ status: 201, type: CatResponseDto })
+  @ZodResponse({ status: HttpStatus.CREATED, type: CatResponseDto })
   create(@Body() body: CreateCatDto): WebResponse<Cat> {
     return { data: this.catsService.create(body) };
   }
@@ -58,7 +59,7 @@ export class CatsController {
   }
 
   @Delete(':id')
-  @HttpCode(204)
+  @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseUUIDPipe) id: string): void {
     this.catsService.remove(id);
   }

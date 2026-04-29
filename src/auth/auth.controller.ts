@@ -43,9 +43,9 @@ function extractContext(req: Request): RequestContext {
 }
 
 @ApiTags('Auth')
-@Controller('/api/app/auth')
+@Controller('app/auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('/register')
   @HttpCode(HttpStatus.CREATED)
@@ -53,17 +53,19 @@ export class AuthController {
   async register(
     @Body() body: RegisterDto,
   ): Promise<WebResponse<RegisterResult>> {
-    return { data: await this.auth.register(body) };
+    return { data: await this.authService.register(body) };
   }
 
   @Post('/verify')
   @HttpCode(HttpStatus.OK)
   @ZodResponse({ type: TokenPairResponseDto })
-  async verify(
+  async verifyEmail(
     @Req() req: Request,
     @Body() body: VerifyEmailDto,
   ): Promise<WebResponse<TokenPair>> {
-    return { data: await this.auth.verifyEmail(body, extractContext(req)) };
+    return {
+      data: await this.authService.verifyEmail(body, extractContext(req)),
+    };
   }
 
   @Post('/resend-otp')
@@ -72,7 +74,7 @@ export class AuthController {
   async resendOtp(
     @Body() body: ResendOtpDto,
   ): Promise<WebResponse<ResendOtpResult>> {
-    return { data: await this.auth.resendOtp(body) };
+    return { data: await this.authService.resendOtp(body) };
   }
 
   @Post('/login')
@@ -82,37 +84,37 @@ export class AuthController {
     @Req() req: Request,
     @Body() body: LoginDto,
   ): Promise<WebResponse<TokenPair>> {
-    return { data: await this.auth.login(body, extractContext(req)) };
+    return { data: await this.authService.login(body, extractContext(req)) };
   }
 
   @Post('/refresh')
   @HttpCode(HttpStatus.OK)
   @ZodResponse({ type: RefreshResponseDto })
   async refresh(@Body() body: RefreshDto): Promise<WebResponse<RefreshResult>> {
-    return { data: await this.auth.refresh(body) };
+    return { data: await this.authService.refresh(body) };
   }
 
   @Post('/google')
   @HttpCode(HttpStatus.OK)
   @ZodResponse({ type: TokenPairResponseDto })
-  async google(
+  async googleLogin(
     @Req() req: Request,
     @Body() body: GoogleLoginDto,
   ): Promise<WebResponse<TokenPair>> {
     return {
-      data: await this.auth.googleLogin(body.code, extractContext(req)),
+      data: await this.authService.googleLogin(body.code, extractContext(req)),
     };
   }
 
   @Post('/facebook')
   @HttpCode(HttpStatus.OK)
   @ZodResponse({ type: TokenPairResponseDto })
-  async facebook(
+  async facebookLogin(
     @Req() req: Request,
     @Body() body: FacebookLoginDto,
   ): Promise<WebResponse<TokenPair>> {
     return {
-      data: await this.auth.facebookLogin(
+      data: await this.authService.facebookLogin(
         body.access_token,
         extractContext(req),
       ),
@@ -122,12 +124,12 @@ export class AuthController {
   @Post('/apple')
   @HttpCode(HttpStatus.OK)
   @ZodResponse({ type: TokenPairResponseDto })
-  async apple(
+  async appleLogin(
     @Req() req: Request,
     @Body() body: AppleLoginDto,
   ): Promise<WebResponse<TokenPair>> {
     return {
-      data: await this.auth.appleLogin(
+      data: await this.authService.appleLogin(
         body.id_token,
         body.user_name,
         extractContext(req),
@@ -140,6 +142,6 @@ export class AuthController {
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   async logout(@SessionId() sessionId: string): Promise<void> {
-    await this.auth.logout(sessionId);
+    await this.authService.logout(sessionId);
   }
 }

@@ -22,7 +22,6 @@ export interface JwtPayload {
 export interface AuthedRequest extends Request {
   user: User;
   sessionId: string;
-  rawToken: string;
 }
 
 export function extractBearerToken(
@@ -79,7 +78,6 @@ export class AuthGuard implements CanActivate {
 
     req.user = existingUser;
     req.sessionId = payload.sessionId;
-    req.rawToken = token;
     return true;
   }
 }

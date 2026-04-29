@@ -9,15 +9,15 @@ import { UsersService } from './users.service';
 
 @ApiTags('Users')
 @ApiBearerAuth()
-@Controller('/api/app/users')
+@Controller('app/users')
 @UseGuards(AuthGuard)
 export class UsersController {
-  constructor(private readonly users: UsersService) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Get('/me')
   @ZodResponse({ type: UserResponseDto })
   me(@Auth() user: User): WebResponse<UserResponse> {
-    return { data: this.users.toResponse(user) };
+    return { data: this.usersService.toResponse(user) };
   }
 
   @Patch('/me')
@@ -26,6 +26,6 @@ export class UsersController {
     @Auth() user: User,
     @Body() body: UpdateUserDto,
   ): Promise<WebResponse<UserResponse>> {
-    return { data: await this.users.update(user.id, body) };
+    return { data: await this.usersService.update(user.id, body) };
   }
 }
