@@ -13,10 +13,6 @@ export const envSchema = z.object({
   DB_PASSWORD: z.string(),
   DB_NAME: z.string(),
 
-  RUN_MIGRATIONS: z
-    .string()
-    .default('false')
-    .transform((v) => v === 'true'),
   LOG_QUERIES: z
     .string()
     .default('false')

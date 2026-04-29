@@ -98,7 +98,7 @@ Add new vars by extending `envSchema` and updating `.env.example`. Don't read `p
 
 PostgreSQL via `drizzle-orm` + `postgres-js`. Two entry points to the same DB:
 
-- `src/common/drizzle.service.ts` (`DrizzleService`) — Nest-managed. Inject this in services: `constructor(private drizzle: DrizzleService)` then `this.drizzle.db.select().from(...)`. Lifecycle-managed: opens on `onModuleInit` (with `SELECT 1` healthcheck), closes on `onModuleDestroy`. Runs `migrate()` at boot when `RUN_MIGRATIONS=true`.
+- `src/common/drizzle.service.ts` (`DrizzleService`) — Nest-managed. Inject this in services: `constructor(private drizzle: DrizzleService)` then `this.drizzle.db.select().from(...)`. Lifecycle-managed: opens on `onModuleInit` (with `SELECT 1` healthcheck), closes on `onModuleDestroy`.
 - `src/db/index.ts` — standalone `db` and `connection`. For drizzle-kit + custom scripts (seeders, one-off CLIs) that run outside the Nest lifecycle. Don't use this from inside Nest services.
 
 `DrizzleService` is provided by `@Global() CommonModule`, so any service can inject it without importing `CommonModule` again.
@@ -153,7 +153,7 @@ npm run orm:up       # apply pending migrations (drizzle-kit migrate)
 npm run orm:check    # validate migrations folder
 ```
 
-In dev, `RUN_MIGRATIONS=true` in `.env` causes `DrizzleService.onModuleInit` to apply pending migrations on boot — handy for containers and CI.
+Migrations are never applied at boot — run `npm run orm:up` explicitly.
 
 ## Scripts
 

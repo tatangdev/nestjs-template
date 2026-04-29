@@ -5,7 +5,6 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import * as schema from '../db/schema';
 import { DATABASE_URL, env } from './env.config';
@@ -38,12 +37,6 @@ export class DrizzleService implements OnModuleInit, OnModuleDestroy {
 
     await this.connection`SELECT 1`;
     this.logger.log('Drizzle ORM connected');
-
-    if (env.RUN_MIGRATIONS) {
-      this.logger.log('Running database migrations...');
-      await migrate(this.db, { migrationsFolder: './src/db/migrations' });
-      this.logger.log('Database migrations completed');
-    }
   }
 
   async onModuleDestroy() {
