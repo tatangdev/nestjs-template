@@ -22,6 +22,13 @@
       "when": 1777466533021,
       "tag": "0002_remarkable_lizard",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777467227451,
+      "tag": "0003_loose_bushwacker",
+      "breakpoints": true
     }
   ]
 }

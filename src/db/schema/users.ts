@@ -26,12 +26,14 @@ export const users = pgTable(
     marketing_emails: boolean('marketing_emails').default(false).notNull(),
     google_id: varchar('google_id', { length: 255 }),
     facebook_id: varchar('facebook_id', { length: 255 }),
+    apple_id: varchar('apple_id', { length: 255 }),
     ...timestamps,
   },
   (t) => [
     uniqueIndex('users_email_idx').on(t.email),
     uniqueIndex('users_google_id_idx').on(t.google_id),
     uniqueIndex('users_facebook_id_idx').on(t.facebook_id),
+    uniqueIndex('users_apple_id_idx').on(t.apple_id),
   ],
 );
 

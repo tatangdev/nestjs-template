@@ -13,6 +13,7 @@ import type { Request } from 'express';
 import { AuthGuard, SessionId } from '../common/auth.guard';
 import type { WebResponse } from '../common/web-response';
 import {
+  AppleLoginDto,
   FacebookLoginDto,
   GoogleLoginDto,
   LoginDto,
@@ -113,6 +114,22 @@ export class AuthController {
     return {
       data: await this.auth.facebookLogin(
         body.access_token,
+        extractContext(req),
+      ),
+    };
+  }
+
+  @Post('/apple')
+  @HttpCode(HttpStatus.OK)
+  @ZodResponse({ type: TokenPairResponseDto })
+  async apple(
+    @Req() req: Request,
+    @Body() body: AppleLoginDto,
+  ): Promise<WebResponse<TokenPair>> {
+    return {
+      data: await this.auth.appleLogin(
+        body.id_token,
+        body.user_name,
         extractContext(req),
       ),
     };

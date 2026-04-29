@@ -35,6 +35,8 @@ export const envSchema = z.object({
   FACEBOOK_APP_ID: z.string().optional(),
   FACEBOOK_APP_SECRET: z.string().optional(),
   FACEBOOK_API_VERSION: z.string().default('v21.0'),
+
+  APPLE_SERVICE_ID: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

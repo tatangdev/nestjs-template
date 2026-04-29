@@ -13,6 +13,7 @@ import type { StringValue } from 'ms';
 import { DrizzleService } from '../common/drizzle.service';
 import { env } from '../common/env.config';
 import { notDeleted, otpCodes, userSessions, users } from '../db/schema';
+import { AppleOAuthService, type AppleUserInfo } from './apple-oauth.service';
 import {
   FacebookOAuthService,
   type FacebookUserInfo,
@@ -33,8 +34,8 @@ import {
   type VerifyEmailRequest,
 } from './auth.dto';
 
-export type OAuthProvider = 'google' | 'facebook';
-export type OAuthProfile = GoogleUserInfo | FacebookUserInfo;
+export type OAuthProvider = 'google' | 'facebook' | 'apple';
+export type OAuthProfile = GoogleUserInfo | FacebookUserInfo | AppleUserInfo;
 
 const OTP_EXPIRY_MS = 5 * 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
@@ -54,6 +55,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly googleOauth: GoogleOAuthService,
     private readonly facebookOauth: FacebookOAuthService,
+    private readonly appleOauth: AppleOAuthService,
   ) {}
 
   async register(request: RegisterRequest): Promise<RegisterResult> {
@@ -255,14 +257,32 @@ export class AuthService {
     return this.linkOrCreateOAuthUser('facebook', profile, context);
   }
 
+  async appleLogin(
+    idToken: string,
+    userName?: string,
+    context?: RequestContext,
+  ): Promise<TokenPair> {
+    const profile = await this.appleOauth.verifyIdToken(idToken, userName);
+    return this.linkOrCreateOAuthUser('apple', profile, context);
+  }
+
   private async linkOrCreateOAuthUser(
     provider: OAuthProvider,
     profile: OAuthProfile,
     context?: RequestContext,
   ): Promise<TokenPair> {
     const providerColumn =
-      provider === 'google' ? users.google_id : users.facebook_id;
-    const providerField = provider === 'google' ? 'google_id' : 'facebook_id';
+      provider === 'google'
+        ? users.google_id
+        : provider === 'facebook'
+          ? users.facebook_id
+          : users.apple_id;
+    const providerField =
+      provider === 'google'
+        ? 'google_id'
+        : provider === 'facebook'
+          ? 'facebook_id'
+          : 'apple_id';
 
     const [byProvider] = await this.drizzle.db
       .select()
